@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Box</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        canvas {
+            background: #eee;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+
+    <script>
+        function Edge(p1, p2) {
+            this.ends = [p1, p2]
+            this.faces = []
+            this.owner = 'none'
+        }
+        function Face() {
+            this.edges = []
+            this.owner = 'none'
+        }
+
+        function Board(pointWidth, pointHeight) {
+            this.width = pointWidth
+            this.height = pointHeight
+            this.edgePool = {}
+
+            this.getEdge = function (p1, p2) {
+                var ps = [p1, p2]
+                ps.sort()
+                if (!this.edgePool[ps[0]])
+                    this.edgePool[ps[0]] = {}
+
+                if (!this.edgePool[ps[0]][ps[1]]) {
+                    this.edgePool[ps[0]][ps[1]] = new Edge(ps[0], ps[1])
+                }
+
+                return this.edgePool[ps[0]][ps[1]]
+            }
+
+            // init board
+            for (var h = 0; h < this.height - 1; h++) {
+                for (var w = 0; w < this.width - 1; w++) {
+                    var box = new Face();
+                    // layout ex:
+                    // a--b
+                    // |  |
+                    // d--c
+                    var a = (this.width * h) + w
+                    var b = a + 1
+                    var c = b + this.width
+                    var d = c - 1
+
+                    var ab = this.getEdge(a,b)
+                    box.edges.push(ab)
+                    ab.faces.push(box)
+
+                    var bc = this.getEdge(b,c)
+                    box.edges.push(bc)
+                    bc.faces.push(box)
+
+                    var cd = this.getEdge(c,d)
+                    box.edges.push(cd)
+                    cd.faces.push(box)
+
+                    var da = this.getEdge(d,a)
+                    box.edges.push(da)
+                    da.faces.push(box)
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
