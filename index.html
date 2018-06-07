@@ -39,16 +39,18 @@
             this.edgePool = {}
 
             this.getEdge = function (p1, p2) {
-                var ps = [p1, p2]
-                ps.sort()
-                if (!this.edgePool[ps[0]])
-                    this.edgePool[ps[0]] = {}
+                if (!this.edgePool[p1])
+                    this.edgePool[p1] = {}
+                if (!this.edgePool[p2])
+                    this.edgePool[p2] = {}
 
-                if (!this.edgePool[ps[0]][ps[1]]) {
-                    this.edgePool[ps[0]][ps[1]] = new Edge(ps[0], ps[1])
+                if (!this.edgePool[p1][p2]) {
+                    var newEdge = new Edge(p1, p2)
+                    this.edgePool[p1][p2] = newEdge
+                    this.edgePool[p2][p1] = newEdge
                 }
 
-                return this.edgePool[ps[0]][ps[1]]
+                return this.edgePool[p1][p2]
             }
 
             // init board
@@ -82,6 +84,73 @@
                 }
             }
         }
+
+        function mapPointToScreen(point, board, ctx) {
+            var xFactor = (point % board.width) / board.width
+            var yFactor = (Math.trunc(point / board.width)) / board.height
+
+            // sp: screen point
+            var sp = {}, margin = 20
+            sp.x = ctx.canvas.clientWidth * xFactor + margin
+            sp.y = ctx.canvas.clientHeight * yFactor + margin
+            
+            return sp
+        }
+
+        function draw(board) {
+            var canvas = document.getElementById("myCanvas");
+            var ctx = canvas.getContext("2d");
+            
+            var toVisit = [0]
+            var alreadyDrawn = []
+            while(toVisit.length>0) {
+                // draw current point
+                var p = toVisit.shift()
+                var sp = mapPointToScreen(p, board, ctx)
+                drawPoint(ctx, sp)
+                alreadyDrawn.push(p)
+
+                // queue next points
+                var endpoints = Object.keys(board.edgePool[p])
+                
+                endpoints.forEach(function(endP) {
+                    var edge = board.edgePool[p][endP]
+                    if(alreadyDrawn.indexOf(edge) < 0) {
+                        var spA = sp
+                        var spB = mapPointToScreen(endP, board, ctx)
+                        drawEdge(ctx, spA, spB)
+                        alreadyDrawn.push(edge)
+                    }
+                    if(alreadyDrawn.indexOf(endP) < 0 && toVisit.indexOf(endP) < 0) {
+                        // if not processed or queued, queue it endpoint
+                        toVisit.push(endP)
+                    }
+                })
+            }
+        }
+
+        function drawPoint(ctx, sp) {
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, 5, 0, Math.PI*2, false);
+            ctx.fillStyle = "#D0D0D0";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawEdge(ctx, spA, spB) {
+            var w = .1
+            ctx.beginPath()
+            ctx.moveTo(spA.x, spA.y)
+            ctx.strokeStyle = "#D0D0D0";
+            ctx.lineWidth = 3
+            ctx.lineTo(spB.x, spB.y)
+            ctx.stroke()
+            ctx.closePath()
+        }
+
+        var board = new Board(12,8)
+        draw(board)
+        
     </script>
 
 </body>
