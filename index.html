@@ -23,14 +23,18 @@
     <canvas id="myCanvas" width="480" height="320"></canvas>
 
     <script>
+        const LINE_WIDTH = 3;
+        const CANVAS_MARGIN = 0;
+
+
         function Edge(p1, p2) {
             this.ends = [p1, p2]
             this.faces = []
-            this.owner = 'none'
+            this.owner = null
         }
         function Face() {
             this.edges = []
-            this.owner = 'none'
+            this.owner = null
         }
 
         function Board(pointWidth, pointHeight) {
@@ -66,19 +70,19 @@
                     var c = b + this.width
                     var d = c - 1
 
-                    var ab = this.getEdge(a,b)
+                    var ab = this.getEdge(a, b)
                     box.edges.push(ab)
                     ab.faces.push(box)
 
-                    var bc = this.getEdge(b,c)
+                    var bc = this.getEdge(b, c)
                     box.edges.push(bc)
                     bc.faces.push(box)
 
-                    var cd = this.getEdge(c,d)
+                    var cd = this.getEdge(c, d)
                     box.edges.push(cd)
                     cd.faces.push(box)
 
-                    var da = this.getEdge(d,a)
+                    var da = this.getEdge(d, a)
                     box.edges.push(da)
                     da.faces.push(box)
                 }
@@ -89,21 +93,75 @@
             var xFactor = (point % board.width) / board.width
             var yFactor = (Math.trunc(point / board.width)) / board.height
 
-            // sp: screen point
-            var sp = {}, margin = 20
-            sp.x = ctx.canvas.clientWidth * xFactor + margin
-            sp.y = ctx.canvas.clientHeight * yFactor + margin
-            
-            return sp
+            const canvas = ctx.canvas
+            const boxSize = getBoxScreenSize(canvas, board)
+            return {
+                x: canvas.clientWidth * xFactor + boxSize.x / 2,
+                y: canvas.clientHeight * yFactor + boxSize.y / 2
+            }
         }
 
-        function draw(board) {
-            var canvas = document.getElementById("myCanvas");
-            var ctx = canvas.getContext("2d");
-            
+        function getBoxScreenSize(canvas, board) {
+            return {
+                x: canvas.clientWidth / board.width,
+                y: canvas.clientHeight / board.height
+            }
+        }
+        function getScreenMargin(boxSize) {
+            return {
+                x: boxSize.x / 2,
+                y: boxSize.y / 2
+            }
+        }
+
+        function mapScreenToEdge(sp, board, canvas) {
+            const boxSize = getBoxScreenSize(canvas, board)
+            const margin = getScreenMargin(boxSize)
+            // factors represent a percentage in board coordinates
+            const xFactor = (sp.x - margin.x) / (canvas.clientWidth - boxSize.x)
+            const yFactor = (sp.y - margin.y) / (canvas.clientHeight - boxSize.y)
+            console.log("xFactor:" + xFactor + " yFactor:" + yFactor)
+
+            // ratios are the scaled board coordinate
+            const xRatio = xFactor * (board.width - 1), yRatio = yFactor * (board.height - 1)
+            console.log("Ratio: " + xRatio + ", " + yRatio)
+
+            // round is the nearest actual coordinate
+            const xRound = Math.round(xRatio), yRound = Math.round(yRatio)
+            console.log("Rounded: " + xRound + ", " + yRound)
+
+            var p1, p2
+            // check if mouse is closer to a horizontal or vertical edge, then translate to edge endpoints.
+            console.log("x: " + Math.abs(xRound - xRatio) + " vs y: " + Math.abs(yRound - yRatio))
+            if (Math.abs(yRound - yRatio) < Math.abs(xRound - xRatio)) {
+                p1 = yRound * board.width + Math.floor(xRatio)
+                p2 = p1 + 1
+            } else {
+                p1 = Math.floor(yRatio) * board.width + xRound
+                p2 = p1 + board.width
+            }
+            // with the endpoints, the edge obj can be pulled from the edge pool
+            return board.getEdge(p1, p2)
+        }
+
+
+        function getMousePos(canvas, evt) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: clamp(evt.clientX - rect.left, 0, rect.right),
+                y: clamp(evt.clientY - rect.top, 0, rect.bottom)
+            };
+        }
+        function clamp(n, min, max) {
+            return Math.min(Math.max(n, min), max)
+        }
+
+        function draw(ctx, board) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
             var toVisit = [0]
             var alreadyDrawn = []
-            while(toVisit.length>0) {
+            while (toVisit.length > 0) {
                 // draw current point
                 var p = toVisit.shift()
                 var sp = mapPointToScreen(p, board, ctx)
@@ -112,45 +170,55 @@
 
                 // queue next points
                 var endpoints = Object.keys(board.edgePool[p])
-                
-                endpoints.forEach(function(endP) {
+
+                endpoints.forEach(function (endP) {
                     var edge = board.edgePool[p][endP]
-                    if(alreadyDrawn.indexOf(edge) < 0) {
+                    if (alreadyDrawn.indexOf(edge) < 0) {
                         var spA = sp
                         var spB = mapPointToScreen(endP, board, ctx)
-                        drawEdge(ctx, spA, spB)
+                        drawEdge(ctx, spA, spB, edge.owner)
                         alreadyDrawn.push(edge)
                     }
-                    if(alreadyDrawn.indexOf(endP) < 0 && toVisit.indexOf(endP) < 0) {
+                    if (alreadyDrawn.indexOf(endP) < 0 && toVisit.indexOf(endP) < 0) {
                         // if not processed or queued, queue it endpoint
                         toVisit.push(endP)
                     }
                 })
             }
+
         }
 
         function drawPoint(ctx, sp) {
             ctx.beginPath();
-            ctx.arc(sp.x, sp.y, 5, 0, Math.PI*2, false);
+            ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2, false);
             ctx.fillStyle = "#D0D0D0";
             ctx.fill();
             ctx.closePath();
         }
 
-        function drawEdge(ctx, spA, spB) {
+        function drawEdge(ctx, spA, spB, owner) {
             var w = .1
             ctx.beginPath()
             ctx.moveTo(spA.x, spA.y)
-            ctx.strokeStyle = "#D0D0D0";
-            ctx.lineWidth = 3
+            ctx.strokeStyle = owner ? "#000000" : "#D0D0D0";
+            ctx.lineWidth = LINE_WIDTH;
             ctx.lineTo(spB.x, spB.y)
             ctx.stroke()
             ctx.closePath()
         }
 
-        var board = new Board(12,8)
-        draw(board)
-        
+        const board = new Board(12, 8)
+        var ctx = document.getElementById("myCanvas").getContext("2d");
+        ctx.canvas.addEventListener('click', function (evt) {
+            const mousePos = getMousePos(ctx.canvas, evt)
+            const edge = mapScreenToEdge(mousePos, board, ctx.canvas)
+            edge.owner = "player"
+            console.log(edge)
+            draw(ctx, board)
+        }, false);
+
+        draw(ctx, board)
+
     </script>
 
 </body>
