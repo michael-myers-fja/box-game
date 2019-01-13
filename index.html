@@ -21,6 +21,11 @@
 <body>
 
     <canvas id="myCanvas" width="480" height="320"></canvas>
+    <div id="controls">
+        <span> P1: <input id="p1" name="p1"/></span>
+        <span> P2: <input id="p2" name="p2"/></span>
+        <button id="submit" onclick="formsubmit()">Submit</button>
+    </div>
 
     <script>
         function Edge(p1, p2) {
@@ -146,6 +151,12 @@
             ctx.lineTo(spB.x, spB.y)
             ctx.stroke()
             ctx.closePath()
+        }
+
+        function formsubmit(event) {
+            var p1Input = document.getElementById("p1").value;
+            var p2Input = document.getElementById("p2").value;
+            console.log("P1: "+p1Input+" P2: "+p2Input);
         }
 
         var board = new Board(12,8)
