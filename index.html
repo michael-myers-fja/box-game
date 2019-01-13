@@ -22,8 +22,8 @@
 
     <canvas id="myCanvas" width="480" height="320"></canvas>
     <div id="controls">
-        <span> P1: <input id="p1" name="p1"/></span>
-        <span> P2: <input id="p2" name="p2"/></span>
+        <span> P1: <input id="p1" name="p1" /></span>
+        <span> P2: <input id="p2" name="p2" /></span>
         <button id="submit" onclick="formsubmit()">Submit</button>
     </div>
 
@@ -31,23 +31,29 @@
         const LINE_WIDTH = 3;
         const CANVAS_MARGIN = 0;
 
-
-        function Edge(p1, p2) {
-            this.ends = [p1, p2]
-            this.faces = []
-            this.owner = null
-        }
-        function Face() {
-            this.edges = []
-            this.owner = null
+        class Edge {
+            constructor(p1, p2) {
+                this.ends = [p1, p2]
+                this.faces = []
+                this.owner = null
+            }
         }
 
-        function Board(pointWidth, pointHeight) {
-            this.width = pointWidth
-            this.height = pointHeight
-            this.edgePool = {}
+        class Face {
+            constructor() {
+                this.edges = []
+                this.owner = null
+            }
+        }
 
-            this.getEdge = function (p1, p2) {
+        class Board {
+            constructor(pointWidth, pointHeight) {
+                this.width = pointWidth
+                this.height = pointHeight
+                this.edgePool = {}
+            }
+
+            getEdge(p1, p2) {
                 if (!this.edgePool[p1])
                     this.edgePool[p1] = {}
                 if (!this.edgePool[p2])
@@ -63,36 +69,41 @@
             }
 
             // init board
-            for (var h = 0; h < this.height - 1; h++) {
-                for (var w = 0; w < this.width - 1; w++) {
-                    var box = new Face();
-                    // layout ex:
-                    // a--b
-                    // |  |
-                    // d--c
-                    var a = (this.width * h) + w
-                    var b = a + 1
-                    var c = b + this.width
-                    var d = c - 1
+            init() {
+                for (var h = 0; h < this.height - 1; h++) {
+                    for (var w = 0; w < this.width - 1; w++) {
+                        var box = new Face();
+                        // layout ex:
+                        // a--b
+                        // |  |
+                        // d--c
+                        var a = (this.width * h) + w
+                        var b = a + 1
+                        var c = b + this.width
+                        var d = c - 1
 
-                    var ab = this.getEdge(a, b)
-                    box.edges.push(ab)
-                    ab.faces.push(box)
+                        var ab = this.getEdge(a, b)
+                        box.edges.push(ab)
+                        ab.faces.push(box)
 
-                    var bc = this.getEdge(b, c)
-                    box.edges.push(bc)
-                    bc.faces.push(box)
+                        var bc = this.getEdge(b, c)
+                        box.edges.push(bc)
+                        bc.faces.push(box)
 
-                    var cd = this.getEdge(c, d)
-                    box.edges.push(cd)
-                    cd.faces.push(box)
+                        var cd = this.getEdge(c, d)
+                        box.edges.push(cd)
+                        cd.faces.push(box)
 
-                    var da = this.getEdge(d, a)
-                    box.edges.push(da)
-                    da.faces.push(box)
+                        var da = this.getEdge(d, a)
+                        box.edges.push(da)
+                        da.faces.push(box)
+                    }
                 }
             }
         }
+
+
+
 
         function mapPointToScreen(point, board, ctx) {
             var xFactor = (point % board.width) / board.width
@@ -112,6 +123,7 @@
                 y: canvas.clientHeight / board.height
             }
         }
+
         function getScreenMargin(boxSize) {
             return {
                 x: boxSize.x / 2,
@@ -215,10 +227,11 @@
         function formsubmit(event) {
             var p1Input = document.getElementById("p1").value;
             var p2Input = document.getElementById("p2").value;
-            console.log("P1: "+p1Input+" P2: "+p2Input);
+            console.log("P1: " + p1Input + " P2: " + p2Input);
         }
-        
+
         const board = new Board(12, 8)
+        board.init()
         var ctx = document.getElementById("myCanvas").getContext("2d");
         ctx.canvas.addEventListener('click', function (evt) {
             const mousePos = getMousePos(ctx.canvas, evt)
