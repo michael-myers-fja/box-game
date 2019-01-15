@@ -83,7 +83,8 @@ class Screen {
         }
     }
 
-    getScreenMargin(boxSize) {
+    getScreenMargin(board) {
+        const boxSize = this.getBoxSize(board)
         return {
             x: boxSize.x / 2,
             y: boxSize.y / 2
@@ -92,24 +93,24 @@ class Screen {
 
     mapScreenToEdge(sp, board) {
         const boxSize = this.getBoxSize(board)
-        const margin = this.getScreenMargin(boxSize)
+        const margin = this.getScreenMargin(board)
 
         // factors represent a percentage in board coordinates
         const xFactor = (sp.x - margin.x) / (this.canvas.clientWidth - boxSize.x)
         const yFactor = (sp.y - margin.y) / (this.canvas.clientHeight - boxSize.y)
-        console.log("xFactor:" + xFactor + " yFactor:" + yFactor)
+        debugLog("xFactor:" + xFactor + " yFactor:" + yFactor)
 
         // ratios are the scaled board coordinate
         const xRatio = xFactor * (board.width - 1), yRatio = yFactor * (board.height - 1)
-        console.log("Ratio: " + xRatio + ", " + yRatio)
+        debugLog("Ratio: " + xRatio + ", " + yRatio)
 
         // round is the nearest actual coordinate
         const xRound = Math.round(xRatio), yRound = Math.round(yRatio)
-        console.log("Rounded: " + xRound + ", " + yRound)
+        debugLog("Rounded: " + xRound + ", " + yRound)
 
         var p1, p2
         // check if mouse is closer to a horizontal or vertical edge, then translate to edge endpoints.
-        console.log("x: " + Math.abs(xRound - xRatio) + " vs y: " + Math.abs(yRound - yRatio))
+        debugLog("x: " + Math.abs(xRound - xRatio) + " vs y: " + Math.abs(yRound - yRatio))
         if (Math.abs(yRound - yRatio) < Math.abs(xRound - xRatio)) {
             p1 = yRound * board.width + Math.floor(xRatio)
             p2 = p1 + 1
@@ -122,18 +123,22 @@ class Screen {
     }
 
     selectEdge(evt, board) {
-        const mousePos = this.getMousePos(evt)
-        const edge = screen.mapScreenToEdge(mousePos, board)
-        edge.owner = "player"
-        console.log(edge)
-        this.draw(board)
+        const margin = this.getScreenMargin(board)
+        const mousePos = this.getMousePos(evt, margin)
+
+        const edge = this.mapScreenToEdge(mousePos, board)
+        if (edge && !edge.owner) {
+            edge.owner = "player"
+            debugLog(edge)
+            this.draw(board)
+        }
     }
-    
-    getMousePos(evt) {
+
+    getMousePos(evt, margin) {
         const rect = this.canvas.getBoundingClientRect();
         return {
-            x: this.clamp(evt.clientX - rect.left, 0, rect.right),
-            y: this.clamp(evt.clientY - rect.top, 0, rect.bottom)
+            x: this.clamp(evt.clientX - rect.left, margin.x, rect.right - margin.x),
+            y: this.clamp(evt.clientY - rect.top, margin.y, rect.bottom - margin.y)
         };
     }
 

@@ -18,19 +18,22 @@ class Board {
         this.width = pointWidth
         this.height = pointHeight
         this.edgePool = {}
+        this.initialized = false
     }
 
     getEdge(p1, p2) {
-        if (!this.edgePool[p1])
-            this.edgePool[p1] = {}
-        if (!this.edgePool[p2])
-            this.edgePool[p2] = {}
+        if(!this.initialized) {        
+            if (!this.edgePool[p1])
+                this.edgePool[p1] = {}
+            if (!this.edgePool[p2])
+                this.edgePool[p2] = {}
 
-        if (!this.edgePool[p1][p2]) {
-            var newEdge = new Edge(p1, p2)
-            this.edgePool[p1][p2] = newEdge
-            this.edgePool[p2][p1] = newEdge
-        }
+            if (!this.edgePool[p1][p2]) {
+                var newEdge = new Edge(p1, p2)
+                this.edgePool[p1][p2] = newEdge
+                this.edgePool[p2][p1] = newEdge
+            }
+        }   
 
         return this.edgePool[p1][p2]
     }
@@ -66,5 +69,6 @@ class Board {
                 da.faces.push(box)
             }
         }
+        this.initialized = true
     }
 }
