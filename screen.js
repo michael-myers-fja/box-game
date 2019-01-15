@@ -120,4 +120,24 @@ class Screen {
         // with the endpoints, the edge obj can be pulled from the edge pool
         return board.getEdge(p1, p2)
     }
+
+    selectEdge(evt, board) {
+        const mousePos = this.getMousePos(evt)
+        const edge = screen.mapScreenToEdge(mousePos, board)
+        edge.owner = "player"
+        console.log(edge)
+        this.draw(board)
+    }
+    
+    getMousePos(evt) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: this.clamp(evt.clientX - rect.left, 0, rect.right),
+            y: this.clamp(evt.clientY - rect.top, 0, rect.bottom)
+        };
+    }
+
+    clamp(n, min, max) {
+        return Math.min(Math.max(n, min), max)
+    }
 }

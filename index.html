@@ -33,17 +33,7 @@
         const LINE_WIDTH = 3;
         const CANVAS_MARGIN = 0;
     
-        function getMousePos(canvas, evt) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: clamp(evt.clientX - rect.left, 0, rect.right),
-                y: clamp(evt.clientY - rect.top, 0, rect.bottom)
-            };
-        }
-    
-        function clamp(n, min, max) {
-            return Math.min(Math.max(n, min), max)
-        }
+
     
         function formsubmit(event) {
             const p1Input = document.getElementById("p1").value;
@@ -58,11 +48,7 @@
         const screen = new Screen(canvas);
     
         canvas.addEventListener('click', function (evt) {
-            const mousePos = getMousePos(canvas, evt)
-            const edge = screen.mapScreenToEdge(mousePos, board)
-            edge.owner = "player"
-            console.log(edge)
-            screen.draw(board)
+            screen.selectEdge(evt, board)
         }, false);
     
         screen.draw(board)
