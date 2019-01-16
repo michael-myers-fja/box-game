@@ -17,20 +17,21 @@
         }
     </style>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
     <script src="board.js"></script>
     <script src="screen.js"></script>
 </head>
 
 <body>
     <canvas id="myCanvas" width="480" height="320"></canvas>
-    <div id="controls">
+    <!-- <div id="controls">
         <span> P1: <input id="p1" name="p1" /></span>
         <span> P2: <input id="p2" name="p2" /></span>
         <button id="submit" onclick="formsubmit()">Submit</button>
-    </div>
+    </div> -->
 
     <script>
-        debugging = false // GLOBAL
+        debugging = true // GLOBAL
         const LINE_WIDTH = 3;
         const CANVAS_MARGIN = 0;
 
