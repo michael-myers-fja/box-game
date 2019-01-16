@@ -22,7 +22,7 @@ class Board {
     }
 
     getEdge(p1, p2) {
-        if(!this.initialized) {        
+        if (!this.initialized) {
             if (!this.edgePool[p1])
                 this.edgePool[p1] = {}
             if (!this.edgePool[p2])
@@ -33,7 +33,7 @@ class Board {
                 this.edgePool[p1][p2] = newEdge
                 this.edgePool[p2][p1] = newEdge
             }
-        }   
+        }
 
         return this.edgePool[p1][p2]
     }
@@ -70,5 +70,18 @@ class Board {
             }
         }
         this.initialized = true
+    }
+
+    play(edge, player) {
+        if (edge && !edge.owner) {
+            edge.owner = player
+            debugLog(player + " choose " + edge)
+            edge.faces.forEach(face => {
+                if(face.edges.every(fEdge=> fEdge.owner)) {
+                    face.owner = player
+                    debugLog(player + " wins box " +face)
+                }
+            })
+        }
     }
 }

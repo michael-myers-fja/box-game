@@ -11,6 +11,7 @@ class Screen {
     draw(board) {
         const ctx = this.getCtx()
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const boxsize = this.getBoxSize(board);
 
         var toVisit = [0]
         var alreadyDrawn = []
@@ -26,9 +27,15 @@ class Screen {
 
             endpoints.forEach(endP => {
                 const edge = board.edgePool[p][endP]
+                edge.faces.forEach(face => {
+                    if (alreadyDrawn.indexOf(face) < 0) {
+                        this.drawFace(face, board, boxsize);
+                        alreadyDrawn.push(face)
+                    }
+                })
                 if (alreadyDrawn.indexOf(edge) < 0) {
-                    var spA = sp
-                    var spB = this.mapPointToScreen(endP, board)
+                    const spA = sp
+                    const spB = this.mapPointToScreen(endP, board)
                     this.drawEdge(spA, spB, edge.owner)
                     alreadyDrawn.push(edge)
                 }
@@ -40,13 +47,15 @@ class Screen {
         }
     }
 
-    drawPoint(sp) {
-        const ctx = this.getCtx()
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2, false);
-        ctx.fillStyle = "#D0D0D0";
-        ctx.fill();
-        ctx.closePath();
+    drawFace(face, board, boxSize) {
+        if (face.owner) {
+            const points = _.uniq(face.edges.flatMap(e => e.ends))
+            const min = points.slice(1).reduce((min, p) => Math.min(min, p), points[0])
+            const loc = this.mapPointToScreen(min, board)
+            const ctx = this.getCtx()
+            ctx.fillStyle = 'gray'
+            ctx.fillRect(loc.x, loc.y, boxSize.x, boxSize.y)
+        }
     }
 
     drawEdge(spA, spB, owner) {
@@ -58,6 +67,15 @@ class Screen {
         ctx.lineTo(spB.x, spB.y)
         ctx.stroke()
         ctx.closePath()
+    }
+
+    drawPoint(sp) {
+        const ctx = this.getCtx()
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2, false);
+        ctx.fillStyle = "#D0D0D0";
+        ctx.fill();
+        ctx.closePath();
     }
 
     mapPointToScreen(point, board) {
@@ -127,9 +145,8 @@ class Screen {
         const mousePos = this.getMousePos(evt, margin)
 
         const edge = this.mapScreenToEdge(mousePos, board)
-        if (edge && !edge.owner) {
-            edge.owner = "player"
-            debugLog(edge)
+        if (edge) {
+            board.play(edge, "player")
             this.draw(board)
         }
     }
