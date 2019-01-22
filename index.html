@@ -18,8 +18,9 @@
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
-    <script src="board.js"></script>
-    <script src="screen.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/screen.js"></script>
+    <script src="js/game.js"></script>
 </head>
 
 <body>
@@ -46,17 +47,12 @@
                 console.log("P1: " + p1Input + " P2: " + p2Input);
             }
 
-            const board = new Board(12, 8)
-            board.init()
-
             const canvas = document.getElementById("myCanvas")
-            const screen = new Screen(canvas);
+            const game = new Game(canvas, 2, { width: 12, height: 12 })
 
-            canvas.addEventListener('click', function (evt) {
-                screen.selectEdge(evt, board)
-            }, false);
-
-            screen.draw(board)
+            canvas.addEventListener('click', evt =>
+                game.makeMove(evt)
+                , false);
         })()
 
     </script>

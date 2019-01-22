@@ -54,7 +54,7 @@ class Screen {
             const min = points.slice(1).reduce((min, p) => Math.min(min, p), points[0])
             const loc = this.mapPointToScreen(min, board)
             const ctx = this.getCtx()
-            ctx.fillStyle = 'gray'
+            ctx.fillStyle = face.owner.color
             ctx.fillRect(loc.x, loc.y, boxSize.x, boxSize.y)
         }
     }
@@ -141,13 +141,13 @@ class Screen {
         return board.getEdge(p1, p2)
     }
 
-    selectEdge(evt, board) {
+    selectEdge(evt, player, board) {
         const margin = this.getScreenMargin(board)
         const mousePos = this.getMousePos(evt, margin)
 
         const edge = this.mapScreenToEdge(mousePos, board)
         if (edge) {
-            board.play(edge, "player")
+            board.play(edge, player)
             this.draw(board)
         }
     }

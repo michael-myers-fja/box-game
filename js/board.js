@@ -1,3 +1,10 @@
+class Player {
+    constructor(name) {
+        this.name = name
+        this.color = ''
+    }
+}
+
 class Edge {
     constructor(p1, p2) {
         this.ends = [p1, p2]
@@ -75,11 +82,11 @@ class Board {
     play(edge, player) {
         if (edge && !edge.owner) {
             edge.owner = player
-            debugLog(player + " choose " + edge)
+            debugLog(`${player.name} choose edge ${edge.ends}`)
             edge.faces.forEach(face => {
                 if(face.edges.every(fEdge=> fEdge.owner)) {
                     face.owner = player
-                    debugLog(player + " wins box " +face)
+                    debugLog(`${player.name} wins box ${_.uniq(face.edges.flatMap(edge=>edge.ends))}`)
                 }
             })
         }
