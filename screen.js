@@ -33,6 +33,7 @@ class Screen {
                         alreadyDrawn.push(face)
                     }
                 })
+                
                 if (alreadyDrawn.indexOf(edge) < 0) {
                     const spA = sp
                     const spB = this.mapPointToScreen(endP, board)
