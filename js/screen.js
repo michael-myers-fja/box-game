@@ -1,16 +1,11 @@
-
 class Screen {
     constructor(canvas) {
         this.canvas = canvas
-    }
-
-    getCtx() {
-        return this.canvas.getContext('2d')
+        this.artist = new Artist(canvas.getContext('2d'));
     }
 
     draw(board) {
-        const ctx = this.getCtx()
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.artist.clear(this.canvas.width, this.canvas.height);
         const boxsize = this.getBoxSize(board);
 
         var toVisit = [0]
@@ -19,25 +14,32 @@ class Screen {
             // draw current point
             var p = toVisit.shift()
             var sp = this.mapPointToScreen(p, board)
-            this.drawPoint(sp)
-            alreadyDrawn.push(p)
 
             // queue next points
             var endpoints = Object.keys(board.edgePool[p])
 
             endpoints.forEach(endP => {
                 const edge = board.edgePool[p][endP]
+
+                if(alreadyDrawn.indexOf(endP) < 0) {
+                    this.artist.drawPoint(sp, edge.owner)
+                    alreadyDrawn.push(p)
+                }
+
                 edge.faces.forEach(face => {
-                    if (alreadyDrawn.indexOf(face) < 0) {
-                        this.drawFace(face, board, boxsize);
+                    if (face.owner && alreadyDrawn.indexOf(face) < 0) {
+                        const points = _.uniq(face.edges.flatMap(e => e.ends))
+                        const min = points.slice(1).reduce((min, p) => Math.min(min, p), points[0])
+                        const loc = this.mapPointToScreen(min, board)
+                        this.artist.drawFace(face.owner.color, loc, boxsize);
                         alreadyDrawn.push(face)
                     }
                 })
-                
+
                 if (alreadyDrawn.indexOf(edge) < 0) {
                     const spA = sp
                     const spB = this.mapPointToScreen(endP, board)
-                    this.drawEdge(spA, spB, edge.owner)
+                    this.artist.drawEdge(spA, spB, edge.owner)
                     alreadyDrawn.push(edge)
                 }
                 if (alreadyDrawn.indexOf(endP) < 0 && toVisit.indexOf(endP) < 0) {
@@ -48,40 +50,7 @@ class Screen {
         }
     }
 
-    drawFace(face, board, boxSize) {
-        if (face.owner) {
-            const points = _.uniq(face.edges.flatMap(e => e.ends))
-            const min = points.slice(1).reduce((min, p) => Math.min(min, p), points[0])
-            const loc = this.mapPointToScreen(min, board)
-            const ctx = this.getCtx()
-            ctx.fillStyle = face.owner.color
-            ctx.fillRect(loc.x, loc.y, boxSize.x, boxSize.y)
-        }
-    }
-
-    drawEdge(spA, spB, owner) {
-        const ctx = this.getCtx()
-        ctx.beginPath()
-        ctx.moveTo(spA.x, spA.y)
-        ctx.strokeStyle = owner ? "#000000" : "#D0D0D0";
-        ctx.lineWidth = LINE_WIDTH;
-        ctx.lineTo(spB.x, spB.y)
-        ctx.stroke()
-        ctx.closePath()
-    }
-
-    drawPoint(sp) {
-        const ctx = this.getCtx()
-        ctx.beginPath();
-        ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2, false);
-        ctx.fillStyle = "#D0D0D0";
-        ctx.fill();
-        ctx.closePath();
-    }
-
     mapPointToScreen(point, board) {
-        const ctx = this.getCtx()
-
         // factors represent location as a scale
         const xFactor = (point % board.width) / board.width
         const yFactor = (Math.trunc(point / board.width)) / board.height
