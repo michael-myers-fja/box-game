@@ -10,18 +10,17 @@ class Artist {
 
   drawEdge(spA, spB, owner) {
     this.ctx.beginPath();
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeStyle = owner ? "black" : "lightgray";
     this.ctx.moveTo(spA.x, spA.y);
-    this.ctx.strokeStyle = owner ? "#000000" : "#D0D0D0";
-    this.ctx.lineWidth = LINE_WIDTH;
     this.ctx.lineTo(spB.x, spB.y);
     this.ctx.stroke();
-    this.ctx.closePath();
   }
 
   drawPoint(sp, owned) {
     this.ctx.beginPath();
     this.ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2, false);
-    this.ctx.fillStyle = owned ? "black" : "#D0D0D0";
+    this.ctx.fillStyle = owned ? "black" : "lightgray";
     this.ctx.fill();
     this.ctx.closePath();
   }

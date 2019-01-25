@@ -11,41 +11,51 @@ class Screen {
     var toVisit = [0];
     var alreadyDrawn = [];
     while (toVisit.length > 0) {
-      // draw current point
       var p = toVisit.shift();
       var sp = this.mapPointToScreen(p, board);
 
-      // queue next points
-      var endpoints = Object.keys(board.edgePool[p]);
+      const adjacentEdges = Object.entries(board.edgePool[p]).map(
+        entry => entry[1]
+      );
 
-      endpoints.forEach(endP => {
-        const edge = board.edgePool[p][endP];
 
-        if (alreadyDrawn.indexOf(endP) < 0) {
-          this.artist.drawPoint(sp, edge.owner);
-          alreadyDrawn.push(p);
-        }
-
-        edge.faces.forEach(face => {
-          if (face.owner && alreadyDrawn.indexOf(face) < 0) {
-            const points = _.uniq(face.edges.flatMap(e => e.ends));
+      // Each Adjacent edge
+      adjacentEdges.forEach(edge => {
+        // Each Adjacent Face
+        edge.faces.forEach(adjacentFace => {
+          if (adjacentFace.owner && !alreadyDrawn.includes(adjacentFace)) {
+            const points = _.uniq(adjacentFace.edges.flatMap(e => e.ends));
             const min = points
               .slice(1)
               .reduce((min, p) => Math.min(min, p), points[0]);
             const loc = this.mapPointToScreen(min, board);
-            this.artist.drawFace(face.owner.color, loc, boxsize);
-            alreadyDrawn.push(face);
+            this.artist.drawFace(adjacentFace.owner.color, loc, boxsize);
+            alreadyDrawn.push(adjacentFace);
           }
         });
 
-        if (alreadyDrawn.indexOf(edge) < 0) {
+        // Draw Edge
+        if (!alreadyDrawn.includes(edge)) {
           const spA = sp;
-          const spB = this.mapPointToScreen(endP, board);
+          const otherEnd = edge.ends.find(end => end != p);
+          const spB = this.mapPointToScreen(otherEnd, board);
           this.artist.drawEdge(spA, spB, edge.owner);
           alreadyDrawn.push(edge);
         }
-        if (alreadyDrawn.indexOf(endP) < 0 && toVisit.indexOf(endP) < 0) {
-          // if not processed or queued, queue it endpoint
+      });
+
+      // draw current point
+      if (!alreadyDrawn.includes(p)) {
+        // check if connected edges are owned
+        const ownedAdjacent = adjacentEdges.some(edge => edge.owner);
+        this.artist.drawPoint(sp, ownedAdjacent);
+        alreadyDrawn.push(p);
+      }
+      
+      // queue next points
+      Object.keys(board.edgePool[p]).forEach(endP => {
+        if (!alreadyDrawn.includes(endP) && !toVisit.includes(endP)) {
+          // if not processed or queued, queue it
           toVisit.push(endP);
         }
       });
